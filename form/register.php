@@ -2,19 +2,21 @@
 // Change this to your connection info.
 $DATABASE_HOST = 'localhost';
 $DATABASE_USER = 'root';
-$DATABASE_PASS = '';
+$DATABASE_PASS = 'root';
 $DATABASE_NAME = 'phpreg';
+
 // Try and connect using the info above.
 $con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
+
 if (mysqli_connect_errno()) {
-	// If there is an error with the connection, stop the script and display the error.
-	exit('Failed to connect to MySQL: ' . mysqli_connect_error());
+    // If there is an error with the connection, stop the script and display the error.
+    exit('Failed to connect to MySQL: ' . mysqli_connect_error());
 }
 
 // Now we check if the data was submitted, isset() function will check if the data exists.
 if (!isset($_POST['username'], $_POST['password'], $_POST['email'])) {
-	// Could not get the data that should have been sent.
-	exit('Please complete the registration form!');
+    // Could not get the data that should have been sent.
+    exit('Please complete the registration form!');
 }
 
 // We need to check if the account with that username exists.
@@ -31,58 +33,55 @@ if ($stmt = $con->prepare('SELECT id, password FROM accounts WHERE username = ?'
     if (strlen($_POST['password']) > 20 || strlen($_POST['password']) < 5) {
         exit('Password must be between 5 and 20 characters long!');
     }
-	// Bind parameters (s = string, i = int, b = blob, etc), hash the password using the PHP password_hash function.
-	$stmt->bind_param('s', $_POST['username']);
-	$stmt->execute();
-	$stmt->store_result();
-	// Store the result so we can check if the account exists in the database.
-	if ($stmt->num_rows > 0) {
-		// Username already exists
-		echo 'Username exists, please choose another!';
-	} else {
-		// Username doesnt exists, insert new account
-    if ($stmt = $con->prepare('INSERT INTO accounts (username, password, email) VALUES (?, ?, ?)')) {
-	// We do not want to expose passwords in our database, so hash the password and use password_verify when a user logs in.
-	$password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-	$stmt->bind_param('sss', $_POST['username'], $password, $_POST['email']);
 
-	$stmt->execute();
-	
-    echo 'You have successfully registered, you can now login!';
+    // Bind parameters (s = string, i = int, b = blob, etc), hash the password using the PHP password_hash function.
+    $stmt->bind_param('s', $_POST['username']);
+
+    $stmt->execute();
+    $stmt->store_result();
+
+    // Store the result so we can check if the account exists in the database.
+    if ($stmt->num_rows > 0) {
+        // Username already exists
+        echo 'Username exists, please choose another!';
     } else {
-        // Something is wrong with the sql statement, check to make sure accounts table exists with all 3 fields.
-        echo 'Could not prepare statement!';
-    }
+        $username = $_POST['username'];
+        $email = $_POST['email'];
+        $password = $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+
+
+        $sql = "INSERT INTO `accounts` ( `username`, `email`, `password`) VALUES ( '$username', '$email', '$password')";
+
+        // insert in database
+        $rs = mysqli_query($con, $sql);
+
+        if ($rs) {
+            echo "Contact Records Inserted";
         }
-        $stmt->close();
-    } else {
-        // Something is wrong with the sql statement, check to make sure accounts table exists with all 3 fields.
-        echo 'Could not prepare statement!';
     }
-   
-    $con->close();
+    $stmt->close();
+} else {
+    // Something is wrong with the sql statement, check to make sure accounts table exists with all 3 fields.
+    echo 'Could not prepare statement!';
+}
 
-    // database connection code
-    // $con = mysqli_connect('localhost', 'database_user', 'database_password','database');
+$con->close();
 
-    $con = mysqli_connect('localhost', 'root', '','phpreg');
+// // database connection code
+// // $con = mysqli_connect('localhost', 'database_user', 'database_password','database');
+// $con = mysqli_connect('localhost', 'root', 'root', 'phpreg');
 
-    // get the post records
-    $userame = $_POST['username'];
-    $email = $_POST['email'];
-    $password = $_POST['password'];
-    
+// // get the post records
+// $userame = $_POST['username'];
+// $email = $_POST['email'];
+// $password = $_POST['password'];
 
-    // database insert SQL code
-    $sql = "INSERT INTO `accounts` (`Id`, `username`, `email`, `password`) VALUES ('0', '$userame', '$email', '$password')";
+// // database insert SQL code
+// $sql = "INSERT INTO `accounts` (`Id`, `username`, `email`, `password`) VALUES ('0', '$userame', '$email', '$password')";
 
-    // insert in database 
-    $rs = mysqli_query($con, $sql);
+// // insert in database
+// $rs = mysqli_query($con, $sql);
 
-    if($rs)
-    {
-        echo "Contact Records Inserted";
-    }
-
-?>
-    
+// if ($rs) {
+//     echo "Contact Records Inserted";
+// }
