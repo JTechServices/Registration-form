@@ -4,6 +4,7 @@ $DATABASE_HOST = 'localhost';
 $DATABASE_USER = 'root';
 $DATABASE_PASS = 'root';
 $DATABASE_NAME = 'phpreg';
+
 // Try and connect using the info above.
 $con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
 
@@ -21,48 +22,42 @@ if (!isset($_POST['username'], $_POST['password'], $_POST['email'])) {
 // We need to check if the account with that username exists.
 if ($stmt = $con->prepare('SELECT id, password FROM accounts WHERE username = ?')) {
     // Email Validation
-    // if (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
-    //     exit('Email is not valid!');
-    // }
-    // //Invalid Characters Validation
-    // if (preg_match('/^[a-zA-Z0-9]+$/', $_POST['username']) == 0) {
-    //     exit('Username is not valid!');
-    // }
-    // // Character length chack
-    // if (strlen($_POST['password']) > 20 || strlen($_POST['password']) < 5) {
-    //     exit('Password must be between 5 and 20 characters long!');
-    // }
+    if (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+        exit('Email is not valid!');
+    }
+    //Invalid Characters Validation
+    if (preg_match('/^[a-zA-Z0-9]+$/', $_POST['username']) == 0) {
+        exit('Username is not valid!');
+    }
+    // Character length chack
+    if (strlen($_POST['password']) > 20 || strlen($_POST['password']) < 5) {
+        exit('Password must be between 5 and 20 characters long!');
+    }
 
     // Bind parameters (s = string, i = int, b = blob, etc), hash the password using the PHP password_hash function.
-    
     $stmt->bind_param('s', $_POST['username']);
+
     $stmt->execute();
     $stmt->store_result();
+
     // Store the result so we can check if the account exists in the database.
     if ($stmt->num_rows > 0) {
         // Username already exists
         echo 'Username exists, please choose another!';
     } else {
-        
+        $username = $_POST['username'];
+        $email = $_POST['email'];
+        $password = $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
 
-       echo  $username = $_POST['username'];
-       echo  $email = $_POST['email'];
-        // $password = $_POST['password'];
-        echo $password = $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-        // Username doesnt exists, insert new account
-        
-    
-       echo  $sql = "INSERT INTO `accounts` ( `username`, `email`, `password`) VALUES ( '$username', '$email', '$password')";
+        $sql = "INSERT INTO `accounts` ( `username`, `email`, `password`) VALUES ( '$username', '$email', '$password')";
 
         // insert in database
         $rs = mysqli_query($con, $sql);
 
-            if ($rs) {
-        echo "Contact Records Inserted";
-    }
-
-
+        if ($rs) {
+            echo "Contact Records Inserted";
+        }
     }
     $stmt->close();
 } else {
